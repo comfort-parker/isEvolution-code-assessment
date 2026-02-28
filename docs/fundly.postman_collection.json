@@ -1,0 +1,108 @@
+{
+  "info": {
+    "name": "Fundly API",
+    "_postman_id": "fundly-api-v1",
+    "description": "Fundly crowdfunding platform. Base URL: http://localhost:3000\n\nTest credentials (after `make seed`):\n  alice@example.com / password123\n  bob@example.com   / password123\n  carol@example.com / password123",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"email\": \"new@example.com\", \"password\": \"password123\", \"name\": \"New User\"}"},
+            "url": {"raw": "http://localhost:3000/api/auth/register"}
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"email\": \"alice@example.com\", \"password\": \"password123\"}"},
+            "url": {"raw": "http://localhost:3000/api/auth/login"}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Campaigns",
+      "item": [
+        {
+          "name": "List active campaigns",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "http://localhost:3000/api/campaigns"}
+          }
+        },
+        {
+          "name": "Get campaign by ID",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "http://localhost:3000/api/campaigns/:id", "variable": [{"key": "id", "value": "1"}]}
+          }
+        },
+        {
+          "name": "Create campaign",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "body": {"mode": "raw", "raw": "{\"title\": \"My Campaign\", \"description\": \"A great idea.\", \"goal_amount\": 5000, \"deadline\": \"2025-12-31T00:00:00Z\"}"},
+            "url": {"raw": "http://localhost:3000/api/campaigns"}
+          }
+        },
+        {
+          "name": "Update campaign status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "body": {"mode": "raw", "raw": "{\"status\": \"active\"}"},
+            "url": {"raw": "http://localhost:3000/api/campaigns/:id/status", "variable": [{"key": "id", "value": "1"}]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pledges",
+      "item": [
+        {
+          "name": "List campaign pledges",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "http://localhost:3000/api/campaigns/:id/pledges", "variable": [{"key": "id", "value": "1"}]}
+          }
+        },
+        {
+          "name": "Back a campaign",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "body": {"mode": "raw", "raw": "{\"amount\": 100}"},
+            "url": {"raw": "http://localhost:3000/api/campaigns/:id/pledges", "variable": [{"key": "id", "value": "1"}]}
+          }
+        },
+        {
+          "name": "Cancel a pledge",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "http://localhost:3000/api/campaigns/:id/pledges/:pledgeId", "variable": [{"key": "id", "value": "1"}, {"key": "pledgeId", "value": "1"}]}
+          }
+        }
+      ]
+    }
+  ]
+}

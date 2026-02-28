@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: fundly
+      POSTGRES_USER: fundly
+      POSTGRES_PASSWORD: fundly
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: .
+    command: npm run dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://fundly:fundly@db:5432/fundly
+      JWT_SECRET: dev-jwt-secret-not-for-production
+      PORT: 3000
+      NODE_ENV: development
+    depends_on:
+      - db
+
+volumes:
+  pgdata:

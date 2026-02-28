@@ -1,0 +1,79 @@
+# #eng-backend — Slack thread export
+# Date: 2024-02-01
+
+---
+
+**Dara (PM)** [10:14 AM]
+Hey team — we got a complaint from a campaign owner. They say their campaign
+shows $4,200 raised but they only got $3,000 deposited when we paid out.
+Can someone look into this?
+
+---
+
+**Jin (Backend)** [10:31 AM]
+Looking... ok so the $4,200 includes pledges that are still in 'pending'
+status. Pending means payment hasn't been confirmed yet but we're already
+adding them to raised_amount when the pledge is created.
+
+---
+
+**Dara** [10:33 AM]
+So we're showing them money they don't actually have?
+
+---
+
+**Jin** [10:34 AM]
+Yeah. The pledge goes in as 'pending', raised_amount goes up immediately,
+then if Stripe declines the card we never roll it back.
+
+---
+
+**Raj (Tech Lead)** [10:38 AM]
+This is FUND-134. We discussed this in the payment sprint — the fix is to
+only count 'confirmed' pledges towards raised_amount, or alternatively
+update raised_amount asynchronously after payment confirmation.
+
+We went with the optimistic approach for the demo and it never got fixed.
+
+---
+
+**Jin** [10:41 AM]
+There's also a related issue — I noticed the pledge list endpoint returns
+ALL pledge statuses publicly, including 'failed'. So if your card declines
+on someone's campaign page, anyone can see it. Probably should filter to
+confirmed only on the public endpoint.
+
+---
+
+**Raj** [10:44 AM]
+Yep, add that to FUND-134. Also while you're in there — there's no deadline
+check on the pledge endpoint. An active campaign past its deadline can still
+take pledges. We have at least one campaign like this right now.
+
+---
+
+**Dara** [10:46 AM]
+How does that happen if the status is 'active'?
+
+---
+
+**Raj** [10:47 AM]
+Status doesn't automatically flip when the deadline passes. We'd need a
+scheduled job for that. Short term the pledge route should just check
+`deadline > NOW()` before accepting a pledge.
+
+---
+
+**Jin** [10:50 AM]
+On it. I'll also look at the raised_amount decrement issue — someone
+reported cancelling a pledge and the total not going down.
+
+---
+
+**Raj** [10:51 AM]
+Yeah the DELETE handler never updates raised_amount. Classic.
+All of this is FUND-134. Let's get it fixed before the next campaign payout.
+
+---
+
+*[Thread closed]*
