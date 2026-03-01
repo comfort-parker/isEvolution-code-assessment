@@ -58,44 +58,58 @@ async function seed() {
     const yesterday = new Date(Date.now() - 86400000).toISOString();
 
     const { rows: campaigns } = await client.query(
-      `INSERT INTO campaigns
-        (owner_id, title, description, goal_amount, raised_amount, status, deadline)
-       VALUES
-        ($1, 'Solar-Powered Community Library',
-             'Bringing renewable energy to our local library.',
-             10000, 6200, 'active', $4),
-        ($2, 'Open Source Recipe App',
-             'A free app for sharing family recipes across generations.',
-             5000, 5000, 'funded', $3),
-        ($1, 'Urban Beekeeping Starter Kit',
-             'Help us launch a rooftop beekeeping program.',
-             2000, 0, 'draft', $4),
-        ($3, 'Midnight Run Documentary',
-             'A short film about overnight delivery workers.',
-             8000, 1500, 'active', $4),
-        ($2, 'Expired Campaign',
-             'This campaign deadline has passed.',
-             3000, 800, 'active', $5)
-       RETURNING id`,
-      [alice.id, bob.id, carol.id, nextMonth, yesterday]
-    );
+  `INSERT INTO campaigns
+    (owner_id, title, description, goal_amount, raised_amount, status, deadline)
+   VALUES
+    ($1, 'Solar-Powered Community Library',
+     'Bringing renewable energy to our local library.',
+     10000, 6200, 'active', $4),
+
+    ($2, 'Open Source Recipe App',
+     'A free app for sharing family recipes across generations.',
+     5000, 5000, 'funded', $4),
+
+    ($1, 'Urban Beekeeping Starter Kit',
+     'Help us launch a rooftop beekeeping program.',
+     2000, 0, 'draft', $4),
+
+    ($3, 'Midnight Run Documentary',
+     'A short film about overnight delivery workers.',
+     8000, 1500, 'active', $4),
+
+    ($2, 'Expired Campaign',
+     'This campaign deadline has passed.',
+     3000, 800, 'cancelled', $5)
+
+   RETURNING id`,
+  [alice.id, bob.id, carol.id, nextMonth, yesterday]
+);
+
 
     const [library, recipe, beekeeping, documentary, expired] = campaigns;
 
     // Pledges — a mix of confirmed and pending
-    await client.query(
-      `INSERT INTO pledges (campaign_id, backer_id, amount, status) VALUES
-        ($1, $3, 1500, 'confirmed'),
-        ($1, $4, 2000, 'confirmed'),
-        ($1, $3, 1200, 'pending'),   -- pending but already in raised_amount (the bug)
-        ($1, $4, 1500, 'confirmed'),
-        ($2, $3, 2500, 'confirmed'),
-        ($2, $4, 2500, 'confirmed'),
-        ($4, $3,  750, 'confirmed'),
-        ($4, $3,  750, 'pending'),
-        ($5, $4,  800, 'confirmed')`,
-      [library.id, recipe.id, alice.id, carol.id, bob.id]
-    );
+   await client.query(
+  `INSERT INTO pledges (campaign_id, backer_id, amount, status) VALUES
+    ($1, $5, 1500, 'confirmed'),
+    ($1, $6, 2000, 'confirmed'),
+    ($1, $5, 1200, 'pending'),
+    ($1, $6, 1500, 'confirmed'),
+    ($2, $5, 2500, 'confirmed'),
+    ($2, $6, 2500, 'confirmed'),
+    ($3, $5, 750, 'confirmed'),
+    ($3, $5, 750, 'pending'),
+    ($4, $6, 800, 'confirmed')`,
+  [
+    library.id,     // $1
+    recipe.id,      // $2
+    documentary.id, // $3
+    expired.id,     // $4
+    alice.id,       // $5
+    carol.id        // $6
+  ]
+);
+
 
     console.log("Seed complete. Test accounts:");
     console.log("  alice@example.com / password123");

@@ -97,7 +97,9 @@ router.patch("/:id/status", authenticate, async (req, res) => {
   const VALID_STATUSES = ["active", "cancelled"];
 
   if (!VALID_STATUSES.includes(status)) {
-    return res.status(400).json({ error: `status must be one of: ${VALID_STATUSES.join(", ")}` });
+    return res.status(400).json({
+      error: `status must be one of: ${VALID_STATUSES.join(", ")}`
+    });
   }
 
   try {
@@ -105,23 +107,45 @@ router.patch("/:id/status", authenticate, async (req, res) => {
       "SELECT * FROM campaigns WHERE id = $1",
       [req.params.id]
     );
+
     const campaign = rows[0];
 
-    if (!campaign) return res.status(404).json({ error: "Campaign not found." });
+    if (!campaign) {
+      return res.status(404).json({
+        error: "Campaign not found."
+      });
+    }
 
-    // BUG (IDOR / missing ownership check):
-    // Any authenticated user can change any campaign's status.
-    // The ownership check (campaign.owner_id === req.user.id) is missing.
-    // This was left out "temporarily" during a demo rush and never added back.
+    // Authorization check
+    if (campaign.owner_id !== req.user.id) {
+      return res.status(403).json({
+        error: "You are not authorized to modify this campaign."
+      });
+    }
 
+    // Secure update (database-level security)
     const { rows: updated } = await pool.query(
-      "UPDATE campaigns SET status = $1 WHERE id = $2 RETURNING *",
-      [status, req.params.id]
+      `UPDATE campaigns
+       SET status = $1
+       WHERE id = $2
+       AND owner_id = $3
+       RETURNING *`,
+      [status, req.params.id, req.user.id]
     );
+
+    if (!updated[0]) {
+      return res.status(403).json({
+        error: "Not authorized or campaign not found."
+      });
+    }
+
     return res.json(updated[0]);
+
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "Internal server error." });
+    return res.status(500).json({
+      error: "Internal server error."
+    });
   }
 });
 

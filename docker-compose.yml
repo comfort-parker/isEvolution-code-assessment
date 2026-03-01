@@ -14,7 +14,7 @@ services:
 
   api:
     build: .
-    command: npm run dev
+    command: sh -c "node src/db/migrate.js && npm run dev"
     volumes:
       - .:/app
       - /app/node_modules
